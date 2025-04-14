@@ -6,6 +6,22 @@ nav {
   z-index: 100;
 }
 
+.nav-bar{
+    background-color: #333;
+    overflow: hidden;
+}
+.navbar a {
+      float: left;
+      display: block;
+      color: white;
+      text-align: center;
+      padding: 14px 20px;
+      text-decoration: none;
+    }
+
+    .navbar a:hover {
+      background-color: #575757;
+
 .nav-links {
   list-style: none;
   display: flex;
@@ -25,12 +41,10 @@ nav {
   transition: color 0.3s ease;
 }
 
-.nav-links a:hover {
-  color: #004ba0;
-}
-
     * {
       box-sizing: border-box;
+      margin:0;
+      padding:0;
     }
 
     body {
