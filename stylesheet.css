@@ -60,27 +60,20 @@
       color: #666;
     }
 
-   * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    /* Navigation styles */
-    .navbar {
+   .sidebar {
+      width: 200px;
       background-color: #333;
-      overflow: hidden;
+      height: 100vh; /* Full height */
+      padding-top: 20px;
     }
 
-    .navbar a {
-      float: left;
+    .sidebar a {
       display: block;
       color: white;
-      text-align: center;
-      padding: 14px 20px;
+      padding: 12px 16px;
       text-decoration: none;
     }
 
-    .navbar a:hover {
+    .sidebar a:hover {
       background-color: #575757;
     }
