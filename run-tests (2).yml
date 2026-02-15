@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "Triggering test execution for Test Plan ID: $TEST_PLAN_ID"
 
-          API_URL="https://server.contextqa.com/test_plans/$TEST_PLAN_ID/execution?apk_build_url=$APK_BUILD_URL&ipa_build_url=$IPA_BUILD_URL"
+          API_URL="https://server.contextqa.com/test_plans/$TEST_PLAN_ID/execution"
 
           echo "Calling API: $API_URL"
 
