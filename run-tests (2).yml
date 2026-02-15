@@ -16,14 +16,14 @@ jobs:
       - name: Set Test Variables
         run: |
           echo "TEST_PLAN_ID=321" >> $GITHUB_ENV
-          echo "TOKEN=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkZWVwY3FhX2Vycm9yc3F1YWQiLCJleHAiOjE3NzEyMzMwOTEsImlhdCI6MTc3MTE0NjY5MSwidGVuYW50IjoiZXJyb3JzcXVhZCJ9.hag-BJojXLo3jf6zorAJOSg4Vl_MIftu5dI4GQ0oLozP8bcB3LIjtujqv1TE0Hr7mU8mKOpoCU-zHXTlcmOYpg" >> $GITHUB_ENV
+          echo "TOKEN=xnBjB4bn0wK1/hzlzKDETA" >> $GITHUB_ENV
 
       - name: Trigger Test Plan Execution (Start Test Run)
         id: trigger-test
         run: |
           echo "Triggering test execution for Test Plan ID: $TEST_PLAN_ID"
 
-          API_URL="https://server.contextqa.com/test_plans/$TEST_PLAN_ID/execution"
+          API_URL="https://server.contextqa.com/test_plans/321/execution"
 
           echo "Calling API: $API_URL"
 
@@ -66,7 +66,7 @@ jobs:
 
           while [ "$STATUS" != "STATUS_COMPLETED" ]; do
             sleep 30
-            RESPONSE=$(curl -s --location "https://server.contextqa.com/test_plan_results/$JOB_ID/results" \
+            RESPONSE=$(curl -s --location "https://server.contextqa.com/test_plan_results/321/results" \
               --header "token: $TOKEN")
 
             RESULT=$(echo $RESPONSE | jq -r '.result')
