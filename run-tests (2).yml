@@ -1,0 +1,106 @@
+name: ContextQA Test Plan Execution
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-contextqa-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Test Variables
+        run: |
+          echo "TEST_PLAN_ID=X" >> $GITHUB_ENV
+          echo "TOKEN=X" >> $GITHUB_ENV
+
+      - name: Trigger Test Plan Execution (Start Test Run)
+        id: trigger-test
+        run: |
+          echo "Triggering test execution for Test Plan ID: $TEST_PLAN_ID"
+
+          API_URL="https://server.contextqa.com/test_plans/$TEST_PLAN_ID/execution?apk_build_url=$APK_BUILD_URL&ipa_build_url=$IPA_BUILD_URL"
+
+          echo "Calling API: $API_URL"
+
+          RESPONSE=$(curl -s -w "%{http_code}" --location "$API_URL" \
+            --header "token: $TOKEN"
+          )
+
+          HTTP_CODE="${RESPONSE: -3}"
+          BODY="${RESPONSE::-3}"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "❌ API Error while starting test!"
+            echo "HTTP Code: $HTTP_CODE"
+            echo "Response: $BODY"
+            exit 1
+          fi
+
+          echo "Response: $BODY"
+
+          JOB_ID=$(echo $BODY | jq -r '.id')
+
+          if [ -z "$JOB_ID" ] || [ "$JOB_ID" = "null" ]; then
+            echo "❌ ERROR: Job ID missing in API response!"
+            echo "Full Response: $BODY"
+            exit 1
+          fi
+
+          echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
+          echo "Started Test Job ID: $JOB_ID"
+
+      - name: Wait before polling
+        run: sleep 10
+        
+      - name: Poll Test Result Until Completed
+        id: poll-result
+        run: |
+          echo "⏳ Waiting for test plan $TEST_PLAN_ID to complete..."
+          STATUS=""
+          PREV_COMPLETED=-1
+
+          while [ "$STATUS" != "STATUS_COMPLETED" ]; do
+            sleep 30
+            RESPONSE=$(curl -s --location "https://server.contextqa.com/test_plan_results/$JOB_ID/results" \
+              --header "token: $TOKEN")
+
+            RESULT=$(echo $RESPONSE | jq -r '.result')
+            STATUS=$(echo $RESPONSE | jq -r '.status')
+            TOTAL=$(echo $RESPONSE | jq -r '.totalCount')
+            PASSED=$(echo $RESPONSE | jq -r '.passedCount')
+            FAILED=$(echo $RESPONSE | jq -r '.failedCount')
+            ABORTED=$(echo $RESPONSE | jq -r '.abortedCount')
+            STOPPED=$(echo $RESPONSE | jq -r '.stoppedCount')
+            NOT_EXEC=$(echo $RESPONSE | jq -r '.notExecutedCount')
+            REPORT_URL=$(echo $RESPONSE | jq -r '.reportFileUrl')
+
+            COMPLETED=$((PASSED + FAILED + ABORTED + STOPPED + NOT_EXEC))
+
+            if [ "$COMPLETED" -ne "$PREV_COMPLETED" ]; then
+              echo "➡️ Status: $STATUS | Completed: $COMPLETED / $TOTAL | Passed: $PASSED | Failed: $FAILED"
+              PREV_COMPLETED=$COMPLETED
+            else
+              echo "➡️ Status: $STATUS | No new updates..."
+            fi
+
+            if [ "$STATUS" = "STATUS_COMPLETED" ]; then
+              echo "🟢 Status: COMPLETED – All tests finished."
+              break
+            fi
+          done
+
+          echo "RESULT_JSON=$RESPONSE" >> $GITHUB_ENV
+          echo "FINAL_RESULT=$RESULT" >> $GITHUB_ENV
+          echo "TOTAL=$TOTAL" >> $GITHUB_ENV
+          echo "PASSED=$PASSED" >> $GITHUB_ENV
+          echo "FAILED=$FAILED" >> $GITHUB_ENV
+          echo "REPORT_URL=$REPORT_URL" >> $GITHUB_ENV
+
+          echo "✔️ Test Execution Completed"
+          echo "🧾 FINAL RESULT: $RESULT"
+          echo "📌 JOB ID: $JOB_ID"
