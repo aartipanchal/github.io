@@ -1,4 +1,4 @@
-name: ContextQA Test Plan Execution
+name: ContextQA Test Plan Execution 
 
 on:
   push:
